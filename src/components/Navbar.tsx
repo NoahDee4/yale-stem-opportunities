@@ -3,13 +3,30 @@
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Navbar() {
   const { user, loading, signIn, signOut } = useAuth();
   const { theme, toggle } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showLoginHint, setShowLoginHint] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      const dismissed = sessionStorage.getItem("loginHintDismissed");
+      if (!dismissed) {
+        const timer = setTimeout(() => setShowLoginHint(true), 800);
+        return () => clearTimeout(timer);
+      }
+    }
+    if (user) setShowLoginHint(false);
+  }, [loading, user]);
+
+  const dismissHint = () => {
+    setShowLoginHint(false);
+    sessionStorage.setItem("loginHintDismissed", "1");
+  };
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-white/80 backdrop-blur-xl dark:border-border-dark dark:bg-surface-dark/80">
@@ -74,9 +91,38 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <button onClick={signIn} className="btn-primary !py-2 !text-[13px]">
-              Sign in
-            </button>
+            <div className="relative">
+              <AnimatePresence>
+                {showLoginHint && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 6 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 top-full mt-2.5 z-50 w-64"
+                  >
+                    <div className="relative rounded-xl border border-border bg-white px-4 py-3 shadow-lg dark:border-border-dark dark:bg-surface-dark">
+                      {/* Arrow pointing up */}
+                      <div className="absolute -top-[7px] right-6 h-3 w-3 rotate-45 border-l border-t border-border bg-white dark:border-border-dark dark:bg-surface-dark" />
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-[12.5px] leading-relaxed text-text-secondary dark:text-text-dark-secondary">
+                          Log in to contribute opportunities and save opportunities
+                        </p>
+                        <button
+                          onClick={dismissHint}
+                          className="mt-0.5 shrink-0 rounded-md p-0.5 text-text-tertiary transition-colors hover:text-text-primary dark:text-text-dark-tertiary dark:hover:text-text-dark-primary"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <button onClick={signIn} className="btn-primary !py-2 !text-[13px]">
+                Sign in
+              </button>
+            </div>
           )}
         </div>
 
