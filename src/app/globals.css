@@ -1,0 +1,103 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  background-color: #ffffff;
+  color: #0a0a0a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dark body,
+html.dark body {
+  background-color: #0a0a0a;
+  color: #f5f5f5;
+}
+
+::selection {
+  background-color: #0a0a0a;
+  color: #ffffff;
+}
+
+.dark ::selection {
+  background-color: #f5f5f5;
+  color: #0a0a0a;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d4d4d4;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #333;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-medium text-white transition-all duration-200 hover:bg-accent-hover active:scale-[0.98];
+  }
+
+  .dark .btn-primary {
+    @apply bg-accent-dark text-black hover:bg-accent-dark-hover;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-border px-5 py-2.5 text-sm font-medium text-text-primary transition-all duration-200 hover:bg-surface-tertiary active:scale-[0.98];
+  }
+
+  .dark .btn-secondary {
+    @apply border-border-dark text-text-dark-primary hover:bg-surface-dark-tertiary;
+  }
+
+  .card {
+    @apply rounded-2xl border border-border bg-white p-5 transition-all duration-200;
+  }
+
+  .dark .card {
+    @apply border-border-dark bg-surface-dark-secondary;
+  }
+
+  .card-hover {
+    @apply hover:border-black/20 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)];
+  }
+
+  .dark .card-hover {
+    @apply hover:border-white/10 hover:shadow-[0_2px_8px_rgba(255,255,255,0.02)];
+  }
+
+  .input-field {
+    @apply w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-text-primary transition-all duration-200 placeholder:text-text-tertiary focus:border-black/30 focus:outline-none focus:ring-1 focus:ring-black/10;
+  }
+
+  .dark .input-field {
+    @apply border-border-dark bg-surface-dark-secondary text-text-dark-primary placeholder:text-text-dark-tertiary focus:border-white/20 focus:ring-white/5;
+  }
+}
