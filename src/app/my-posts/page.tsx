@@ -12,7 +12,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Opportunity, TypeTag, FieldTag, TYPE_TAGS, FIELD_TAGS } from "@/lib/types";
+import { Opportunity, TypeTag, FieldTag, YearTag, TYPE_TAGS, FIELD_TAGS, YEAR_TAGS } from "@/lib/types";
 import { getTagColor } from "@/lib/tagColors";
 import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -35,6 +35,7 @@ export default function MyPostsPage() {
     expiresOn: "",
     typeTags: [] as TypeTag[],
     fieldTags: [] as FieldTag[],
+    yearTags: [] as YearTag[],
   });
   const [saving, setSaving] = useState(false);
 
@@ -64,12 +65,14 @@ export default function MyPostsPage() {
                 : new Date(data.datePosted),
             postedBy: data.postedBy,
             postedByName: data.postedByName || "Anonymous",
+            anonymous: data.anonymous ?? false,
             expiresOn:
               data.expiresOn instanceof Timestamp
                 ? data.expiresOn.toDate()
                 : new Date(data.expiresOn),
             typeTags: data.typeTags || [],
             fieldTags: data.fieldTags || [],
+            yearTags: data.yearTags || [],
             contact: data.contact,
             description: data.description,
             approved: data.approved ?? true,
@@ -98,6 +101,7 @@ export default function MyPostsPage() {
       expiresOn: new Date(opp.expiresOn).toISOString().split("T")[0],
       typeTags: [...opp.typeTags],
       fieldTags: [...opp.fieldTags],
+      yearTags: [...opp.yearTags],
     });
   };
 
@@ -120,6 +124,7 @@ export default function MyPostsPage() {
         expiresOn: Timestamp.fromDate(new Date(editForm.expiresOn + "T23:59:59-05:00")),
         typeTags: editForm.typeTags,
         fieldTags: editForm.fieldTags,
+        yearTags: editForm.yearTags,
       });
       toast.success("Updated successfully!");
       setEditing(null);
@@ -355,6 +360,33 @@ export default function MyPostsPage() {
                         }
                         className={`rounded-xl px-3.5 py-2 text-[13px] font-semibold transition-all duration-150 ${
                           editForm.fieldTags.includes(tag)
+                            ? getTagColor(tag).active
+                            : "border border-border text-text-secondary hover:border-black/20 dark:border-border-dark dark:text-text-dark-secondary dark:hover:border-white/15"
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
+                    School Year
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {YEAR_TAGS.map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() =>
+                          setEditForm({
+                            ...editForm,
+                            yearTags: toggleTag(editForm.yearTags, tag) as YearTag[],
+                          })
+                        }
+                        className={`rounded-xl px-3.5 py-2 text-[13px] font-semibold transition-all duration-150 ${
+                          editForm.yearTags.includes(tag)
                             ? getTagColor(tag).active
                             : "border border-border text-text-secondary hover:border-black/20 dark:border-border-dark dark:text-text-dark-secondary dark:hover:border-white/15"
                         }`}

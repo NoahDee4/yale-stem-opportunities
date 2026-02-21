@@ -164,6 +164,14 @@ export default function OpportunityCard({
                 {tag}
               </span>
             ))}
+            {opportunity.yearTags.map((tag) => (
+              <span
+                key={tag}
+                className={`rounded-md px-2 py-0.5 text-[11px] font-medium ${getTagColor(tag).pill}`}
+              >
+                {tag}
+              </span>
+            ))}
           </div>
 
           {/* Footer */}

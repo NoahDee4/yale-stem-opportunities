@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { collection, query, orderBy, onSnapshot, doc, setDoc, deleteDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Opportunity, TypeTag, FieldTag } from "@/lib/types";
+import { Opportunity, TypeTag, FieldTag, YearTag } from "@/lib/types";
 import { getTagColor } from "@/lib/tagColors";
 import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -20,6 +20,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [selectedTypes, setSelectedTypes] = useState<TypeTag[]>([]);
   const [selectedFields, setSelectedFields] = useState<FieldTag[]>([]);
+  const [selectedYears, setSelectedYears] = useState<YearTag[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
@@ -35,9 +36,11 @@ export default function HomePage() {
           datePosted: data.datePosted instanceof Timestamp ? data.datePosted.toDate() : new Date(data.datePosted),
           postedBy: data.postedBy,
           postedByName: data.postedByName || "Anonymous",
+          anonymous: data.anonymous ?? false,
           expiresOn: data.expiresOn instanceof Timestamp ? data.expiresOn.toDate() : new Date(data.expiresOn),
           typeTags: data.typeTags || [],
           fieldTags: data.fieldTags || [],
+          yearTags: data.yearTags || [],
           contact: data.contact,
           description: data.description,
           approved: data.approved ?? true,
@@ -87,15 +90,16 @@ export default function HomePage() {
       if (new Date(opp.expiresOn) < now) return false;
       if (selectedTypes.length > 0 && !opp.typeTags.some((t) => selectedTypes.includes(t as TypeTag))) return false;
       if (selectedFields.length > 0 && !opp.fieldTags.some((t) => selectedFields.includes(t as FieldTag))) return false;
+      if (selectedYears.length > 0 && !opp.yearTags.some((t) => selectedYears.includes(t as YearTag))) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         return opp.title.toLowerCase().includes(q) || opp.description.toLowerCase().includes(q) || opp.contact.toLowerCase().includes(q);
       }
       return true;
     });
-  }, [opportunities, selectedTypes, selectedFields, searchQuery]);
+  }, [opportunities, selectedTypes, selectedFields, selectedYears, searchQuery]);
 
-  const activeFilters = selectedTypes.length + selectedFields.length;
+  const activeFilters = selectedTypes.length + selectedFields.length + selectedYears.length;
 
   return (
     <div className="flex min-h-screen flex-col bg-white dark:bg-surface-dark">
@@ -205,8 +209,18 @@ export default function HomePage() {
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12" /></svg>
                 </button>
               ))}
+              {selectedYears.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setSelectedYears(selectedYears.filter((x) => x !== t))}
+                  className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors ${getTagColor(t).pill}`}
+                >
+                  {t}
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                </button>
+              ))}
               <button
-                onClick={() => { setSelectedTypes([]); setSelectedFields([]); }}
+                onClick={() => { setSelectedTypes([]); setSelectedFields([]); setSelectedYears([]); }}
                 className="text-[11px] font-medium text-text-tertiary hover:text-text-primary dark:text-text-dark-tertiary dark:hover:text-text-dark-primary"
               >
                 Clear all
@@ -229,8 +243,10 @@ export default function HomePage() {
                 <TagFlashcards
                   selectedTypes={selectedTypes}
                   selectedFields={selectedFields}
+                  selectedYears={selectedYears}
                   onTypeChange={setSelectedTypes}
                   onFieldChange={setSelectedFields}
+                  onYearChange={setSelectedYears}
                 />
               </div>
             </motion.div>

@@ -60,12 +60,14 @@ export default function TodoPage() {
                     : new Date(data.datePosted),
                 postedBy: data.postedBy,
                 postedByName: data.postedByName || "Anonymous",
+                anonymous: data.anonymous ?? false,
                 expiresOn:
                   data.expiresOn instanceof Timestamp
                     ? data.expiresOn.toDate()
                     : new Date(data.expiresOn),
                 typeTags: data.typeTags || [],
                 fieldTags: data.fieldTags || [],
+                yearTags: data.yearTags || [],
                 contact: data.contact,
                 description: data.description,
                 approved: data.approved ?? true,

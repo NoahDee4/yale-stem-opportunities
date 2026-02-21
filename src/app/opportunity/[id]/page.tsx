@@ -34,9 +34,11 @@ export default function OpportunityDetailPage() {
             datePosted: data.datePosted instanceof Timestamp ? data.datePosted.toDate() : new Date(data.datePosted),
             postedBy: data.postedBy,
             postedByName: data.postedByName || "Anonymous",
+            anonymous: data.anonymous ?? false,
             expiresOn: data.expiresOn instanceof Timestamp ? data.expiresOn.toDate() : new Date(data.expiresOn),
             typeTags: data.typeTags || [],
             fieldTags: data.fieldTags || [],
+            yearTags: data.yearTags || [],
             contact: data.contact,
             description: data.description,
             approved: data.approved ?? true,
@@ -127,6 +129,11 @@ export default function OpportunityDetailPage() {
                 {tag}
               </span>
             ))}
+            {opportunity.yearTags.map((tag) => (
+              <span key={tag} className={`rounded-md px-2.5 py-1 text-[12px] font-medium ${getTagColor(tag).pill}`}>
+                {tag}
+              </span>
+            ))}
           </div>
 
           {/* Title */}
@@ -140,7 +147,7 @@ export default function OpportunityDetailPage() {
               { label: "Posted", value: formatInTimeZone(new Date(opportunity.datePosted), ET, "MMM d, yyyy") },
               { label: "Expires", value: formatInTimeZone(new Date(opportunity.expiresOn), ET, "MMM d, yyyy"), warn: isExpired },
               { label: "Contact", value: opportunity.contact },
-              { label: "Posted by", value: opportunity.postedByName },
+              { label: "Posted by", value: opportunity.anonymous ? "Anonymous" : opportunity.postedByName },
             ].map((item) => (
               <div key={item.label} className="bg-white p-4 dark:bg-surface-dark-secondary">
                 <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-text-tertiary dark:text-text-dark-tertiary">

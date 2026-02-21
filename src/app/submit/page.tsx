@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
-import { TYPE_TAGS, FIELD_TAGS, TypeTag, FieldTag } from "@/lib/types";
+import { TYPE_TAGS, FIELD_TAGS, YEAR_TAGS, TypeTag, FieldTag, YearTag } from "@/lib/types";
 import { getTagColor } from "@/lib/tagColors";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -16,6 +16,7 @@ export default function SubmitPage() {
   const { user, signIn } = useAuth();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const [anonymous, setAnonymous] = useState(false);
 
   const [form, setForm] = useState({
     title: "",
@@ -24,6 +25,7 @@ export default function SubmitPage() {
     expiresOn: "",
     typeTags: [] as TypeTag[],
     fieldTags: [] as FieldTag[],
+    yearTags: [] as YearTag[],
   });
 
   const toggleTag = <T extends string>(arr: T[], val: T, setter: (v: T[]) => void) => {
@@ -47,9 +49,11 @@ export default function SubmitPage() {
         expiresOn: Timestamp.fromDate(new Date(form.expiresOn + "T23:59:59-05:00")),
         typeTags: form.typeTags,
         fieldTags: form.fieldTags,
+        yearTags: form.yearTags,
         datePosted: Timestamp.now(),
         postedBy: user.uid,
-        postedByName: user.displayName || user.email || "Anonymous",
+        postedByName: anonymous ? "Anonymous" : (user.displayName || user.email || "Anonymous"),
+        anonymous: anonymous,
         approved: true,
       });
       toast.success("Posted successfully!");
@@ -175,6 +179,28 @@ export default function SubmitPage() {
               </div>
             </div>
 
+            <div>
+              <label className="mb-2 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
+                School Year
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {YEAR_TAGS.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => toggleTag(form.yearTags, tag, (v) => setForm({ ...form, yearTags: v }))}
+                    className={`rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-all duration-150 ${
+                      form.yearTags.includes(tag)
+                        ? getTagColor(tag).active
+                        : "border border-border text-text-secondary hover:border-black/20 dark:border-border-dark dark:text-text-dark-secondary dark:hover:border-white/15"
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="grid gap-5 sm:grid-cols-2">
               <div>
                 <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
@@ -202,9 +228,32 @@ export default function SubmitPage() {
               </div>
             </div>
 
+            {/* Anonymous toggle */}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setAnonymous(!anonymous)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  anonymous ? "bg-black dark:bg-white" : "bg-gray-200 dark:bg-gray-700"
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out dark:bg-black ${
+                    anonymous ? "translate-x-5" : "translate-x-0"
+                  }`}
+                />
+              </button>
+              <label className="text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
+                Post anonymously
+              </label>
+            </div>
+
             <div className="flex items-center justify-between border-t border-border pt-6 dark:border-border-dark">
               <p className="text-[12px] text-text-tertiary dark:text-text-dark-tertiary">
-                Posting as <span className="font-medium text-text-secondary dark:text-text-dark-secondary">{user.displayName || user.email}</span>
+                Posting as{" "}
+                <span className="font-medium text-text-secondary dark:text-text-dark-secondary">
+                  {anonymous ? "Anonymous" : (user.displayName || user.email)}
+                </span>
               </p>
               <button
                 type="submit"
