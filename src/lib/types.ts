@@ -35,6 +35,20 @@ export type TypeTag = (typeof TYPE_TAGS)[number];
 export type FieldTag = (typeof FIELD_TAGS)[number];
 export type YearTag = (typeof YEAR_TAGS)[number];
 
+export const MENTOR_ROLES = ["Peer Mentor", "Alumni Mentor", "Faculty"] as const;
+export type MentorRole = (typeof MENTOR_ROLES)[number];
+
+export interface Mentor {
+  id: string;
+  name: string;
+  email: string;
+  role: MentorRole;
+  fields: FieldTag[];
+  bio?: string;
+  postedBy: string;
+  dateJoined: Date;
+}
+
 export interface Opportunity {
   id: string;
   title: string;

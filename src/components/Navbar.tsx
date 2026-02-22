@@ -42,6 +42,9 @@ export default function Navbar() {
           <Link href="/" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary">
             Browse
           </Link>
+          <Link href="/mentorship" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary">
+            Mentorship
+          </Link>
           {user && (
             <>
               <Link href="/submit" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary">
@@ -154,6 +157,7 @@ export default function Navbar() {
           >
             <div className="flex flex-col gap-1 px-6 py-3">
               <Link href="/" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Browse</Link>
+              <Link href="/mentorship" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Mentorship</Link>
               {user && <Link href="/submit" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Post</Link>}
               {user && <Link href="/my-posts" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Your Posts</Link>}
               {user && (

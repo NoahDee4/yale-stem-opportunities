@@ -80,6 +80,19 @@ export const TAG_COLORS: Record<string, { active: string; pill: string }> = {
     active: "bg-indigo-100 text-indigo-700 ring-1 ring-indigo-200 dark:bg-indigo-500/20 dark:text-indigo-300 dark:ring-indigo-500/30",
     pill: "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300",
   },
+  // Mentor Role Tags
+  "Peer Mentor": {
+    active: "bg-blue-100 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:ring-blue-500/30",
+    pill: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300",
+  },
+  "Alumni Mentor": {
+    active: "bg-purple-100 text-purple-700 ring-1 ring-purple-200 dark:bg-purple-500/20 dark:text-purple-300 dark:ring-purple-500/30",
+    pill: "bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300",
+  },
+  Faculty: {
+    active: "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:ring-emerald-500/30",
+    pill: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300",
+  },
   // Year Tags
   "Freshman Summer": {
     active: "bg-yellow-100 text-yellow-700 ring-1 ring-yellow-200 dark:bg-yellow-500/20 dark:text-yellow-300 dark:ring-yellow-500/30",
