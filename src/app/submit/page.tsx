@@ -21,7 +21,7 @@ export default function SubmitPage() {
   const [form, setForm] = useState({
     title: "",
     description: "",
-    contact: "",
+    contacts: [""],
     expiresOn: "",
     typeTags: [] as TypeTag[],
     fieldTags: [] as FieldTag[],
@@ -32,10 +32,18 @@ export default function SubmitPage() {
     setter(arr.includes(val) ? arr.filter((t) => t !== val) : [...arr, val]);
   };
 
+  const addContact = () => setForm({ ...form, contacts: [...form.contacts, ""] });
+  const removeContact = (i: number) => setForm({ ...form, contacts: form.contacts.filter((_, idx) => idx !== i) });
+  const updateContact = (i: number, val: string) => {
+    const contacts = [...form.contacts];
+    contacts[i] = val;
+    setForm({ ...form, contacts });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) { toast.error("Please sign in first"); return; }
-    if (!form.title || !form.description || !form.contact || !form.expiresOn) {
+    if (!form.title || !form.description || form.contacts.every(c => !c.trim()) || !form.expiresOn) {
       toast.error("Please fill in all required fields"); return;
     }
     if (form.typeTags.length === 0) { toast.error("Select at least one type"); return; }
@@ -45,7 +53,7 @@ export default function SubmitPage() {
       await addDoc(collection(db, "opportunities"), {
         title: form.title,
         description: form.description,
-        contact: form.contact,
+        contact: form.contacts.filter(c => c.trim()),
         expiresOn: Timestamp.fromDate(new Date(form.expiresOn + "T23:59:59-05:00")),
         typeTags: form.typeTags,
         fieldTags: form.fieldTags,
@@ -201,30 +209,52 @@ export default function SubmitPage() {
               </div>
             </div>
 
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div>
-                <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
-                  Expires On <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="date"
-                  value={form.expiresOn}
-                  onChange={(e) => setForm({ ...form, expiresOn: e.target.value })}
-                  min={new Date().toISOString().split("T")[0]}
-                  className="input-field"
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
-                  Contact <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={form.contact}
-                  onChange={(e) => setForm({ ...form, contact: e.target.value })}
-                  placeholder="Email or name"
-                  className="input-field"
-                />
+            <div>
+              <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
+                Expires On <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="date"
+                value={form.expiresOn}
+                onChange={(e) => setForm({ ...form, expiresOn: e.target.value })}
+                min={new Date().toISOString().split("T")[0]}
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
+                Point of Contact <span className="text-red-400">*</span>
+              </label>
+              <div className="space-y-2">
+                {form.contacts.map((c, i) => (
+                  <div key={i} className="flex gap-2">
+                    <input
+                      type="text"
+                      value={c}
+                      onChange={(e) => updateContact(i, e.target.value)}
+                      placeholder="Email or name"
+                      className="input-field flex-1"
+                    />
+                    {form.contacts.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeContact(i)}
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border text-text-tertiary transition-colors hover:border-red-300 hover:text-red-500 dark:border-border-dark dark:text-text-dark-tertiary dark:hover:border-red-700 dark:hover:text-red-400"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={addContact}
+                  className="flex items-center gap-1.5 text-[13px] font-medium text-text-tertiary transition-colors hover:text-text-primary dark:text-text-dark-tertiary dark:hover:text-text-dark-primary"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+                  Add another contact
+                </button>
               </div>
             </div>
 

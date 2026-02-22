@@ -31,7 +31,7 @@ export default function MyPostsPage() {
   const [editForm, setEditForm] = useState({
     title: "",
     description: "",
-    contact: "",
+    contacts: [""],
     expiresOn: "",
     typeTags: [] as TypeTag[],
     fieldTags: [] as FieldTag[],
@@ -73,7 +73,7 @@ export default function MyPostsPage() {
             typeTags: data.typeTags || [],
             fieldTags: data.fieldTags || [],
             yearTags: data.yearTags || [],
-            contact: data.contact,
+            contact: Array.isArray(data.contact) ? data.contact : (data.contact ? [data.contact] : []),
             description: data.description,
             approved: data.approved ?? true,
           };
@@ -97,7 +97,7 @@ export default function MyPostsPage() {
     setEditForm({
       title: opp.title,
       description: opp.description,
-      contact: opp.contact,
+      contacts: [...opp.contact],
       expiresOn: new Date(opp.expiresOn).toISOString().split("T")[0],
       typeTags: [...opp.typeTags],
       fieldTags: [...opp.fieldTags],
@@ -107,7 +107,7 @@ export default function MyPostsPage() {
 
   const handleSaveEdit = async () => {
     if (!editing) return;
-    if (!editForm.title || !editForm.description || !editForm.contact || !editForm.expiresOn) {
+    if (!editForm.title || !editForm.description || editForm.contacts.every(c => !c.trim()) || !editForm.expiresOn) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -120,7 +120,7 @@ export default function MyPostsPage() {
       await updateDoc(doc(db, "opportunities", editing.id), {
         title: editForm.title,
         description: editForm.description,
-        contact: editForm.contact,
+        contact: editForm.contacts.filter(c => c.trim()),
         expiresOn: Timestamp.fromDate(new Date(editForm.expiresOn + "T23:59:59-05:00")),
         typeTags: editForm.typeTags,
         fieldTags: editForm.fieldTags,
@@ -155,6 +155,14 @@ export default function MyPostsPage() {
 
   const toggleTag = <T extends string>(arr: T[], val: T): T[] =>
     arr.includes(val) ? arr.filter((t) => t !== val) : [...arr, val];
+
+  const addEditContact = () => setEditForm({ ...editForm, contacts: [...editForm.contacts, ""] });
+  const removeEditContact = (i: number) => setEditForm({ ...editForm, contacts: editForm.contacts.filter((_, idx) => idx !== i) });
+  const updateEditContact = (i: number, val: string) => {
+    const contacts = [...editForm.contacts];
+    contacts[i] = val;
+    setEditForm({ ...editForm, contacts });
+  };
 
   if (!authLoading && !user) {
     return (
@@ -413,12 +421,36 @@ export default function MyPostsPage() {
                     <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
                       Contact <span className="text-red-400">*</span>
                     </label>
-                    <input
-                      type="text"
-                      value={editForm.contact}
-                      onChange={(e) => setEditForm({ ...editForm, contact: e.target.value })}
-                      className="input-field"
-                    />
+                    <div className="space-y-2">
+                      {editForm.contacts.map((c, i) => (
+                        <div key={i} className="flex gap-2">
+                          <input
+                            type="text"
+                            value={c}
+                            onChange={(e) => updateEditContact(i, e.target.value)}
+                            placeholder="Email or name"
+                            className="input-field flex-1"
+                          />
+                          {editForm.contacts.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeEditContact(i)}
+                              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border text-text-tertiary transition-colors hover:border-red-300 hover:text-red-500 dark:border-border-dark dark:text-text-dark-tertiary dark:hover:border-red-700 dark:hover:text-red-400"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={addEditContact}
+                        className="flex items-center gap-1.5 text-[13px] font-medium text-text-tertiary transition-colors hover:text-text-primary dark:text-text-dark-tertiary dark:hover:text-text-dark-primary"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+                        Add another contact
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

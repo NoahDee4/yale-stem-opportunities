@@ -39,7 +39,7 @@ export default function OpportunityDetailPage() {
             typeTags: data.typeTags || [],
             fieldTags: data.fieldTags || [],
             yearTags: data.yearTags || [],
-            contact: data.contact,
+            contact: Array.isArray(data.contact) ? data.contact : (data.contact ? [data.contact] : []),
             description: data.description,
             approved: data.approved ?? true,
           });
@@ -146,7 +146,7 @@ export default function OpportunityDetailPage() {
             {[
               { label: "Posted", value: formatInTimeZone(new Date(opportunity.datePosted), ET, "MMM d, yyyy") },
               { label: "Expires", value: formatInTimeZone(new Date(opportunity.expiresOn), ET, "MMM d, yyyy"), warn: isExpired },
-              { label: "Contact", value: opportunity.contact },
+              { label: "Contact", value: opportunity.contact.join(", ") },
               { label: "Posted by", value: opportunity.anonymous ? "Anonymous" : opportunity.postedByName },
             ].map((item) => (
               <div key={item.label} className="bg-white p-4 dark:bg-surface-dark-secondary">
@@ -176,17 +176,24 @@ export default function OpportunityDetailPage() {
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-[14px] font-semibold text-text-primary dark:text-text-dark-primary">Interested?</p>
-                  <p className="text-[13px] text-text-tertiary dark:text-text-dark-tertiary">
-                    Reach out to <span className="font-medium text-text-primary dark:text-text-dark-primary">{opportunity.contact}</span>
-                  </p>
+                  <p className="text-[13px] text-text-tertiary dark:text-text-dark-tertiary">Reach out to:</p>
+                  <div className="mt-1 flex flex-col gap-0.5">
+                    {opportunity.contact.map((c, i) => (
+                      <span key={i} className="text-[13px] font-medium text-text-primary dark:text-text-dark-primary">{c}</span>
+                    ))}
+                  </div>
                 </div>
-                {opportunity.contact.includes("@") && (
-                  <a href={`mailto:${opportunity.contact}`} className="btn-primary shrink-0">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7" />
-                    </svg>
-                    Send Email
-                  </a>
+                {opportunity.contact.some(c => c.includes("@")) && (
+                  <div className="flex shrink-0 flex-col gap-2">
+                    {opportunity.contact.filter(c => c.includes("@")).map((email, i) => (
+                      <a key={i} href={`mailto:${email}`} className="btn-primary">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7" />
+                        </svg>
+                        {email}
+                      </a>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>

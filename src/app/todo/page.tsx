@@ -68,7 +68,7 @@ export default function TodoPage() {
                 typeTags: data.typeTags || [],
                 fieldTags: data.fieldTags || [],
                 yearTags: data.yearTags || [],
-                contact: data.contact,
+                contact: Array.isArray(data.contact) ? data.contact : (data.contact ? [data.contact] : []),
                 description: data.description,
                 approved: data.approved ?? true,
               });

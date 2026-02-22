@@ -46,7 +46,7 @@ export interface Opportunity {
   typeTags: TypeTag[];
   fieldTags: FieldTag[];
   yearTags: YearTag[];
-  contact: string;
+  contact: string[];
   description: string;
   approved: boolean;
 }

@@ -41,7 +41,7 @@ export default function HomePage() {
           typeTags: data.typeTags || [],
           fieldTags: data.fieldTags || [],
           yearTags: data.yearTags || [],
-          contact: data.contact,
+          contact: Array.isArray(data.contact) ? data.contact : (data.contact ? [data.contact] : []),
           description: data.description,
           approved: data.approved ?? true,
         };
@@ -93,7 +93,7 @@ export default function HomePage() {
       if (selectedYears.length > 0 && !opp.yearTags.some((t) => selectedYears.includes(t as YearTag))) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
-        return opp.title.toLowerCase().includes(q) || opp.description.toLowerCase().includes(q) || opp.contact.toLowerCase().includes(q);
+        return opp.title.toLowerCase().includes(q) || opp.description.toLowerCase().includes(q) || opp.contact.some(c => c.toLowerCase().includes(q));
       }
       return true;
     });
