@@ -31,9 +31,22 @@ interface Props {
   index?: number;
   canDelete?: boolean;
   onDelete?: () => void;
+  canEdit?: boolean;
+  onEdit?: () => void;
+  isFavorited?: boolean;
+  onToggleFavorite?: () => void;
 }
 
-export default function MentorCard({ mentor, index = 0, canDelete, onDelete }: Props) {
+export default function MentorCard({
+  mentor,
+  index = 0,
+  canDelete,
+  onDelete,
+  canEdit,
+  onEdit,
+  isFavorited = false,
+  onToggleFavorite,
+}: Props) {
   const [confirming, setConfirming] = useState(false);
   const initials = mentor.name
     .split(" ")
@@ -69,8 +82,41 @@ export default function MentorCard({ mentor, index = 0, canDelete, onDelete }: P
           </span>
         </div>
 
-        {/* Delete button */}
-        {canDelete && (
+        {/* Action buttons */}
+        <div className="flex shrink-0 items-center gap-0.5">
+          {/* Heart / Favorite */}
+          {onToggleFavorite && (
+            <button
+              onClick={onToggleFavorite}
+              className={`rounded-lg p-1.5 transition-all duration-150 ${
+                isFavorited
+                  ? "text-red-500 hover:text-red-600"
+                  : "text-text-tertiary/40 hover:text-red-500 dark:text-text-dark-tertiary/40"
+              }`}
+              title={isFavorited ? "Remove from saved mentors" : "Save mentor"}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill={isFavorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+            </button>
+          )}
+
+          {/* Edit button */}
+          {canEdit && (
+            <button
+              onClick={onEdit}
+              className="rounded-lg p-1.5 text-text-tertiary transition-colors hover:text-blue-500 dark:text-text-dark-tertiary"
+              title="Edit your mentor profile"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+            </button>
+          )}
+
+          {/* Delete button */}
+          {canDelete && (
           <AnimatePresence mode="wait">
             {confirming ? (
               <motion.div
@@ -112,7 +158,8 @@ export default function MentorCard({ mentor, index = 0, canDelete, onDelete }: P
               </motion.button>
             )}
           </AnimatePresence>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Bio */}

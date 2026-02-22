@@ -6,6 +6,8 @@ import {
   addDoc,
   deleteDoc,
   doc,
+  setDoc,
+  updateDoc,
   onSnapshot,
   query,
   orderBy,
@@ -69,6 +71,20 @@ export default function MentorshipPage() {
   });
   const [submitting, setSubmitting] = useState(false);
 
+  // Favorites
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+
+  // Edit modal
+  const [editingMentor, setEditingMentor] = useState<Mentor | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    role: "" as MentorRole | "",
+    fields: [] as FieldTag[],
+    bio: "",
+  });
+  const [saving, setSaving] = useState(false);
+
   // Pre-fill form from user
   useEffect(() => {
     if (user) {
@@ -78,6 +94,16 @@ export default function MentorshipPage() {
         email: prev.email || user.email || "",
       }));
     }
+  }, [user]);
+
+  // Favorites listener
+  useEffect(() => {
+    if (!user) { setFavoriteIds(new Set()); return; }
+    const unsub = onSnapshot(
+      collection(db, "users", user.uid, "favoriteMentors"),
+      (snap) => setFavoriteIds(new Set(snap.docs.map((d) => d.id)))
+    );
+    return () => unsub();
   }, [user]);
 
   // Realtime mentor list
@@ -148,6 +174,61 @@ export default function MentorshipPage() {
     } catch (err) {
       console.error(err);
       toast.error("Failed to remove. Try again.");
+    }
+  };
+
+  const handleToggleFavorite = async (mentorId: string) => {
+    if (!user) { toast.error("Sign in to save mentors"); return; }
+    const ref = doc(db, "users", user.uid, "favoriteMentors", mentorId);
+    try {
+      if (favoriteIds.has(mentorId)) {
+        await deleteDoc(ref);
+        toast.success("Removed from saved mentors");
+      } else {
+        await setDoc(ref, { savedAt: Timestamp.now() });
+        toast.success("Saved mentor! ❤️");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong");
+    }
+  };
+
+  const openEdit = (mentor: Mentor) => {
+    setEditingMentor(mentor);
+    setEditForm({
+      name: mentor.name,
+      email: mentor.email,
+      role: mentor.role,
+      fields: [...mentor.fields],
+      bio: mentor.bio || "",
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingMentor) return;
+    if (!editForm.name.trim() || !editForm.email.trim() || !editForm.role) {
+      toast.error("Please fill in name, email, and role"); return;
+    }
+    if (editForm.fields.length === 0) {
+      toast.error("Select at least one academic field"); return;
+    }
+    setSaving(true);
+    try {
+      await updateDoc(doc(db, "mentors", editingMentor.id), {
+        name: editForm.name.trim(),
+        email: editForm.email.trim(),
+        role: editForm.role,
+        fields: editForm.fields,
+        bio: editForm.bio.trim(),
+      });
+      toast.success("Profile updated!");
+      setEditingMentor(null);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save. Try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -344,6 +425,10 @@ export default function MentorshipPage() {
                         key={mentor.id}
                         mentor={mentor}
                         index={i}
+                        isFavorited={favoriteIds.has(mentor.id)}
+                        onToggleFavorite={() => handleToggleFavorite(mentor.id)}
+                        canEdit={user?.uid === mentor.postedBy}
+                        onEdit={() => openEdit(mentor)}
                         canDelete={user?.uid === mentor.postedBy}
                         onDelete={() => handleDelete(mentor.id)}
                       />
@@ -502,6 +587,160 @@ export default function MentorshipPage() {
           )}
         </AnimatePresence>
       </main>
+
+      {/* Edit Modal */}
+      <AnimatePresence>
+        {editingMentor && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center sm:px-4"
+            onClick={(e) => { if (e.target === e.currentTarget) setEditingMentor(null); }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 24 }}
+              transition={{ duration: 0.25 }}
+              className="w-full max-w-2xl overflow-y-auto rounded-t-2xl bg-white p-6 shadow-xl dark:bg-surface-dark sm:rounded-2xl sm:p-8"
+              style={{ maxHeight: "90vh" }}
+            >
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-[16px] font-bold text-text-primary dark:text-text-dark-primary">Edit Mentor Profile</h2>
+                <button
+                  onClick={() => setEditingMentor(null)}
+                  className="rounded-lg p-1.5 text-text-tertiary transition-colors hover:text-text-primary dark:text-text-dark-tertiary dark:hover:text-text-dark-primary"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                </button>
+              </div>
+
+              <div className="space-y-5">
+                {/* Name */}
+                <div>
+                  <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
+                    Name <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    className="input-field"
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
+                    Email <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    className="input-field"
+                  />
+                </div>
+
+                {/* Role */}
+                <div>
+                  <label className="mb-2 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
+                    Role <span className="text-red-400">*</span>
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {MENTOR_ROLES.map((role) => (
+                      <button
+                        key={role}
+                        type="button"
+                        onClick={() => setEditForm({ ...editForm, role })}
+                        className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-all duration-150 ${
+                          editForm.role === role
+                            ? `${getTagColor(role).active} shadow-sm`
+                            : "border border-border text-text-secondary hover:border-black/20 dark:border-border-dark dark:text-text-dark-secondary dark:hover:border-white/15"
+                        }`}
+                      >
+                        <span>{roleIcons[role]}</span>
+                        {role}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Fields */}
+                <div>
+                  <label className="mb-2 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
+                    Academic Fields <span className="text-red-400">*</span>
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {FIELD_TAGS.map((field) => (
+                      <button
+                        key={field}
+                        type="button"
+                        onClick={() =>
+                          setEditForm({
+                            ...editForm,
+                            fields: editForm.fields.includes(field)
+                              ? editForm.fields.filter((f) => f !== field)
+                              : [...editForm.fields, field],
+                          })
+                        }
+                        className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-semibold transition-all duration-150 ${
+                          editForm.fields.includes(field)
+                            ? `${getTagColor(field).active} shadow-sm`
+                            : "border border-border text-text-secondary hover:border-black/20 dark:border-border-dark dark:text-text-dark-secondary dark:hover:border-white/15"
+                        }`}
+                      >
+                        <span>{fieldIcons[field]}</span>
+                        {field}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Bio */}
+                <div>
+                  <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
+                    Bio <span className="font-normal text-text-tertiary dark:text-text-dark-tertiary">(optional)</span>
+                  </label>
+                  <textarea
+                    value={editForm.bio}
+                    onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                    rows={4}
+                    className="input-field resize-none"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6 flex items-center justify-end gap-3 border-t border-border pt-5 dark:border-border-dark">
+                <button
+                  onClick={() => setEditingMentor(null)}
+                  className="rounded-xl px-4 py-2.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={saving}
+                  className="btn-primary disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {saving ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
+                        <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" fill="currentColor" className="opacity-75" />
+                      </svg>
+                      Saving...
+                    </span>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Footer />
     </div>
