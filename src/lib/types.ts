@@ -49,6 +49,14 @@ export interface Mentor {
   dateJoined: Date;
 }
 
+export interface AlumniEntry {
+  uid: string;
+  name: string;
+  email: string;
+  photoURL: string | null;
+  joinedAt: Date;
+}
+
 export interface Opportunity {
   id: string;
   title: string;
