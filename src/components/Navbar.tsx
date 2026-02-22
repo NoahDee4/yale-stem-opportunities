@@ -11,6 +11,16 @@ export default function Navbar() {
   const { theme, toggle } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showLoginHint, setShowLoginHint] = useState(false);
+  const [yaleError, setYaleError] = useState(false);
+
+  const handleSignIn = async () => {
+    setYaleError(false);
+    try {
+      await signIn();
+    } catch {
+      setYaleError(true);
+    }
+  };
 
   useEffect(() => {
     if (!loading && !user) {
@@ -130,9 +140,16 @@ export default function Navbar() {
                   </motion.div>
                 )}
               </AnimatePresence>
-              <button onClick={signIn} className="btn-primary !py-2 !text-[13px]">
+              <button onClick={handleSignIn} className="btn-primary !py-2 !text-[13px]">
                 Sign in
               </button>
+              {yaleError && (
+                <div className="absolute right-0 top-full mt-2.5 z-50 w-64 rounded-xl border border-red-200 bg-red-50 px-4 py-3 shadow-lg dark:border-red-800 dark:bg-red-950">
+                  <p className="text-[12.5px] leading-relaxed text-red-700 dark:text-red-300">
+                    Only <span className="font-semibold">@yale.edu</span> emails are allowed.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -198,7 +215,7 @@ export default function Navbar() {
                   <button onClick={() => { signOut(); setMenuOpen(false); }} className="text-[12px] font-medium text-text-tertiary dark:text-text-dark-tertiary">Sign out</button>
                 </div>
               ) : (
-                <button onClick={() => { signIn(); setMenuOpen(false); }} className="btn-primary mx-3 my-2">Sign in with Google</button>
+                <button onClick={() => { handleSignIn(); setMenuOpen(false); }} className="btn-primary mx-3 my-2">Sign in with Google</button>
               )}
             </div>
           </motion.div>

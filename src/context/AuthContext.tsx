@@ -43,9 +43,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      const email = result.user.email ?? "";
+      if (!email.endsWith("@yale.edu")) {
+        await firebaseSignOut(auth);
+        throw new Error("Only @yale.edu email addresses are allowed.");
+      }
     } catch (error) {
       console.error("Error signing in:", error);
+      throw error;
     }
   };
 
