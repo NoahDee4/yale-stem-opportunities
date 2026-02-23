@@ -50,35 +50,44 @@ export default function Navbar() {
         {/* Desktop */}
         <div className="hidden items-center gap-1 md:flex">
           <Link href="/" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary">
-            Browse
+            Opportunities
           </Link>
           <Link href="/mentorship" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary">
             Mentorship
           </Link>
           {user && (
             <>
-              <Link href="/submit" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary">
-                Post
-              </Link>
               <Link href="/my-posts" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary">
                 Your Posts
               </Link>
-              <Link href="/todo" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary">
-                <span className="flex items-center gap-1">
+              {/* Saved Lists dropdown */}
+              <div className="relative group">
+                <button className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                   </svg>
-                  To-Do
-                </span>
-              </Link>
-              <Link href="/your-mentors" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary">
-                <span className="flex items-center gap-1">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                  Saved Lists
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 9l6 6 6-6" />
                   </svg>
-                  Your Mentors
-                </span>
-              </Link>
+                </button>
+                <div className="absolute left-0 top-full invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-150 pt-1.5 z-50">
+                  <div className="w-52 rounded-xl border border-border bg-white py-1.5 shadow-lg dark:border-border-dark dark:bg-surface-dark">
+                    <Link href="/todo" className="flex items-center gap-2 px-3.5 py-2 text-[13px] font-medium text-text-secondary hover:text-text-primary hover:bg-surface-tertiary/60 dark:text-text-dark-secondary dark:hover:text-text-dark-primary dark:hover:bg-surface-dark-tertiary/60">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                      </svg>
+                      Saved Opportunities
+                    </Link>
+                    <Link href="/your-mentors" className="flex items-center gap-2 px-3.5 py-2 text-[13px] font-medium text-text-secondary hover:text-text-primary hover:bg-surface-tertiary/60 dark:text-text-dark-secondary dark:hover:text-text-dark-primary dark:hover:bg-surface-dark-tertiary/60">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                      </svg>
+                      Saved Mentors
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </>
           )}
 
@@ -181,29 +190,29 @@ export default function Navbar() {
             className="overflow-hidden border-t border-border dark:border-border-dark md:hidden"
           >
             <div className="flex flex-col gap-1 px-6 py-3">
-              <Link href="/" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Browse</Link>
+              <Link href="/" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Opportunities</Link>
               <Link href="/mentorship" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Mentorship</Link>
-              {user && <Link href="/submit" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Post</Link>}
               {user && <Link href="/my-posts" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Your Posts</Link>}
               {user && (
-                <Link href="/todo" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
-                  <span className="flex items-center gap-1.5">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" className="text-red-400">
-                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                    </svg>
-                    To-Do
-                  </span>
-                </Link>
-              )}
-              {user && (
-                <Link href="/your-mentors" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
-                  <span className="flex items-center gap-1.5">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" className="text-red-400">
-                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                    </svg>
-                    Your Mentors
-                  </span>
-                </Link>
+                <>
+                  <p className="px-3 pt-2 pb-0.5 text-[11px] font-semibold uppercase tracking-wider text-text-tertiary dark:text-text-dark-tertiary">Saved Lists</p>
+                  <Link href="/todo" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
+                    <span className="flex items-center gap-1.5">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" className="text-red-400">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                      </svg>
+                      Saved Opportunities
+                    </span>
+                  </Link>
+                  <Link href="/your-mentors" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
+                    <span className="flex items-center gap-1.5">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" className="text-red-400">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                      </svg>
+                      Saved Mentors
+                    </span>
+                  </Link>
+                </>
               )}
               <div className="my-1 h-px bg-border dark:bg-border-dark" />
               {user ? (

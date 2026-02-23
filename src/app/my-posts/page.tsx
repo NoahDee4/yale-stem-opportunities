@@ -6,24 +6,27 @@ import {
   query,
   where,
   onSnapshot,
+  getDocs,
   doc,
   deleteDoc,
   updateDoc,
   Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Opportunity, TypeTag, FieldTag, YearTag, TYPE_TAGS, FIELD_TAGS, YEAR_TAGS } from "@/lib/types";
+import { Opportunity, TypeTag, FieldTag, YearTag, TYPE_TAGS, FIELD_TAGS, YEAR_TAGS, Mentor, MentorRole, MENTOR_ROLES } from "@/lib/types";
 import { getTagColor } from "@/lib/tagColors";
 import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import OpportunityCard from "@/components/OpportunityCard";
+import MentorCard from "@/components/MentorCard";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 
 export default function MyPostsPage() {
   const { user, loading: authLoading, signIn } = useAuth();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [mentors, setMentors] = useState<Mentor[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Edit modal state
@@ -41,6 +44,46 @@ export default function MyPostsPage() {
 
   // Delete confirmation
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Mentor edit state
+  const [editingMentor, setEditingMentor] = useState<Mentor | null>(null);
+  const [editMentorForm, setEditMentorForm] = useState({
+    name: "",
+    email: "",
+    role: "Peer Mentor" as MentorRole,
+    fields: [] as FieldTag[],
+    bio: "",
+  });
+  const [savingMentor, setSavingMentor] = useState(false);
+
+  // Mentor delete state
+  const [deletingMentorId, setDeletingMentorId] = useState<string | null>(null);
+
+  // Fetch mentors posted by this user
+  useEffect(() => {
+    if (!user) return;
+    getDocs(query(collection(db, "mentors"), where("postedBy", "==", user.uid)))
+      .then((snap) => {
+        const m: Mentor[] = snap.docs.map((d) => {
+          const data = d.data();
+          return {
+            id: d.id,
+            name: data.name,
+            email: data.email,
+            role: data.role as MentorRole,
+            fields: data.fields || [],
+            bio: data.bio || "",
+            postedBy: data.postedBy,
+            dateJoined:
+              data.dateJoined instanceof Timestamp
+                ? data.dateJoined.toDate()
+                : new Date(data.dateJoined),
+          };
+        });
+        setMentors(m);
+      })
+      .catch((err) => console.error("Error fetching mentors:", err));
+  }, [user]);
 
   useEffect(() => {
     if (!user) {
@@ -138,6 +181,63 @@ export default function MyPostsPage() {
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
+  };
+
+  const openMentorEdit = (mentor: Mentor) => {
+    setEditingMentor(mentor);
+    setEditMentorForm({
+      name: mentor.name,
+      email: mentor.email,
+      role: mentor.role,
+      fields: [...mentor.fields],
+      bio: mentor.bio || "",
+    });
+  };
+
+  const handleSaveMentorEdit = async () => {
+    if (!editingMentor) return;
+    if (!editMentorForm.name.trim() || !editMentorForm.email.trim()) {
+      toast.error("Name and email are required");
+      return;
+    }
+    setSavingMentor(true);
+    try {
+      await updateDoc(doc(db, "mentors", editingMentor.id), {
+        name: editMentorForm.name.trim(),
+        email: editMentorForm.email.trim(),
+        role: editMentorForm.role,
+        fields: editMentorForm.fields,
+        bio: editMentorForm.bio.trim(),
+      });
+      setMentors((prev) =>
+        prev.map((m) =>
+          m.id === editingMentor.id
+            ? { ...m, ...editMentorForm, bio: editMentorForm.bio.trim() }
+            : m
+        )
+      );
+      toast.success("Mentor updated!");
+      setEditingMentor(null);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update mentor");
+    } finally {
+      setSavingMentor(false);
+    }
+  };
+
+  const confirmDeleteMentor = async () => {
+    if (!deletingMentorId) return;
+    try {
+      await deleteDoc(doc(db, "mentors", deletingMentorId));
+      setMentors((prev) => prev.filter((m) => m.id !== deletingMentorId));
+      toast.success("Mentor listing deleted");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete mentor listing");
+    } finally {
+      setDeletingMentorId(null);
+    }
   };
 
   const confirmDelete = async () => {
@@ -264,6 +364,41 @@ export default function MyPostsPage() {
               You haven&apos;t posted any opportunities yet.
             </p>
           </motion.div>
+        )}
+
+        {/* Mentor Cards Section */}
+        {mentors.length > 0 && (
+          <div className="mt-10 border-t border-border pt-10 dark:border-border-dark">
+            <motion.h2
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="mb-1 text-xl font-bold tracking-tight text-text-primary dark:text-text-dark-primary"
+            >
+              Your Mentor Listings
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.05 }}
+              className="mb-4 text-[15px] text-text-tertiary dark:text-text-dark-tertiary"
+            >
+              Mentor profiles you&apos;ve shared with the community
+            </motion.p>
+            <div className="grid gap-4 pb-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {mentors.map((mentor, i) => (
+                <MentorCard
+                  key={mentor.id}
+                  mentor={mentor}
+                  index={i}
+                  canEdit
+                  onEdit={() => openMentorEdit(mentor)}
+                  canDelete
+                  onDelete={() => setDeletingMentorId(mentor.id)}
+                />
+              ))}
+            </div>
+          </div>
         )}
       </main>
 
@@ -519,6 +654,196 @@ export default function MyPostsPage() {
                 </button>
                 <button
                   onClick={confirmDelete}
+                  className="flex-1 rounded-xl bg-red-500 px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-red-600"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mentor Edit Modal */}
+      <AnimatePresence>
+        {editingMentor && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+            onClick={() => setEditingMentor(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-border bg-white p-6 shadow-xl dark:border-border-dark dark:bg-surface-dark"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-lg font-bold text-text-primary dark:text-text-dark-primary">Edit mentor listing</h2>
+                <button
+                  onClick={() => setEditingMentor(null)}
+                  className="rounded-lg p-1.5 text-text-tertiary transition-colors hover:text-text-primary dark:text-text-dark-tertiary dark:hover:text-text-dark-primary"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                </button>
+              </div>
+
+              <div className="space-y-5">
+                <div>
+                  <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
+                    Name <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={editMentorForm.name}
+                    onChange={(e) => setEditMentorForm({ ...editMentorForm, name: e.target.value })}
+                    className="input-field"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
+                    Email <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={editMentorForm.email}
+                    onChange={(e) => setEditMentorForm({ ...editMentorForm, email: e.target.value })}
+                    className="input-field"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
+                    Role <span className="text-red-400">*</span>
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {MENTOR_ROLES.map((role) => (
+                      <button
+                        key={role}
+                        type="button"
+                        onClick={() => setEditMentorForm({ ...editMentorForm, role })}
+                        className={`rounded-xl px-3.5 py-2 text-[13px] font-semibold transition-all duration-150 ${
+                          editMentorForm.role === role
+                            ? getTagColor(role).active
+                            : "border border-border text-text-secondary hover:border-black/20 dark:border-border-dark dark:text-text-dark-secondary dark:hover:border-white/15"
+                        }`}
+                      >
+                        {role}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
+                    Academic Fields
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {FIELD_TAGS.map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() =>
+                          setEditMentorForm({
+                            ...editMentorForm,
+                            fields: toggleTag(editMentorForm.fields, tag) as FieldTag[],
+                          })
+                        }
+                        className={`rounded-xl px-3.5 py-2 text-[13px] font-semibold transition-all duration-150 ${
+                          editMentorForm.fields.includes(tag)
+                            ? getTagColor(tag).active
+                            : "border border-border text-text-secondary hover:border-black/20 dark:border-border-dark dark:text-text-dark-secondary dark:hover:border-white/15"
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
+                    Bio
+                  </label>
+                  <textarea
+                    value={editMentorForm.bio}
+                    onChange={(e) => setEditMentorForm({ ...editMentorForm, bio: e.target.value })}
+                    rows={3}
+                    className="input-field resize-none"
+                    placeholder="A short bio about yourself..."
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6 flex items-center justify-end gap-3 border-t border-border pt-5 dark:border-border-dark">
+                <button
+                  onClick={() => setEditingMentor(null)}
+                  className="rounded-xl px-4 py-2.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveMentorEdit}
+                  disabled={savingMentor}
+                  className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {savingMentor ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
+                        <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" fill="currentColor" className="opacity-75" />
+                      </svg>
+                      Saving...
+                    </span>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mentor Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deletingMentorId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+            onClick={() => setDeletingMentorId(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-sm rounded-2xl border border-border bg-white p-6 shadow-xl dark:border-border-dark dark:bg-surface-dark"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-2 text-center text-3xl">🗑️</div>
+              <h3 className="mb-2 text-center text-[15px] font-bold text-text-primary dark:text-text-dark-primary">
+                Delete this mentor listing?
+              </h3>
+              <p className="mb-6 text-center text-[13px] text-text-tertiary dark:text-text-dark-tertiary">
+                This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeletingMentorId(null)}
+                  className="flex-1 rounded-xl border border-border px-4 py-2.5 text-[13px] font-medium text-text-secondary transition-colors hover:border-black/20 dark:border-border-dark dark:text-text-dark-secondary dark:hover:border-white/15"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteMentor}
                   className="flex-1 rounded-xl bg-red-500 px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-red-600"
                 >
                   Delete

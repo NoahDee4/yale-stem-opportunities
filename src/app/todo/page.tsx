@@ -94,7 +94,7 @@ export default function TodoPage() {
     try {
       if (favoriteIds.has(id)) {
         await deleteDoc(favRef);
-        toast.success("Removed from to-do list");
+        toast.success("Removed from saved opportunities");
       } else {
         // Usually we only remove from this page
       }
@@ -111,7 +111,7 @@ export default function TodoPage() {
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center">
             <div className="mx-auto mb-5 text-5xl">❤️</div>
             <h2 className="mb-2 text-xl font-bold text-text-primary dark:text-text-dark-primary">
-              Sign in to see your to-do list
+              Sign in to see your saved opportunities
             </h2>
             <p className="mb-6 text-[13px] text-text-tertiary dark:text-text-dark-tertiary">
               Save opportunities you&apos;re interested in by pressing the heart icon.
@@ -136,7 +136,7 @@ export default function TodoPage() {
             transition={{ duration: 0.4 }}
             className="mb-1 text-2xl font-bold tracking-tight text-text-primary dark:text-text-dark-primary md:text-3xl"
           >
-            Your to-do list
+            Saved Opportunities
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 8 }}

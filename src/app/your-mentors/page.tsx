@@ -123,7 +123,7 @@ export default function YourMentorsPage() {
             transition={{ duration: 0.4 }}
             className="mb-1 text-2xl font-bold tracking-tight text-text-primary dark:text-text-dark-primary md:text-3xl"
           >
-            Your Mentors
+            Saved Mentors
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 8 }}
