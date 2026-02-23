@@ -114,6 +114,19 @@ export const TAG_COLORS: Record<string, { active: string; pill: string }> = {
     active: "bg-slate-100 text-slate-700 ring-1 ring-slate-200 dark:bg-slate-500/20 dark:text-slate-300 dark:ring-slate-500/30",
     pill: "bg-slate-100 text-slate-700 dark:bg-slate-500/20 dark:text-slate-300",
   },
+  // Workshop Format Tags
+  "In-Person": {
+    active: "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:ring-emerald-500/30",
+    pill: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300",
+  },
+  Virtual: {
+    active: "bg-blue-100 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:ring-blue-500/30",
+    pill: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300",
+  },
+  Hybrid: {
+    active: "bg-violet-100 text-violet-700 ring-1 ring-violet-200 dark:bg-violet-500/20 dark:text-violet-300 dark:ring-violet-500/30",
+    pill: "bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300",
+  },
 };
 
 export function getTagColor(tag: string) {

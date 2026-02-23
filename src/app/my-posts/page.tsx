@@ -13,13 +13,14 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Opportunity, TypeTag, FieldTag, YearTag, TYPE_TAGS, FIELD_TAGS, YEAR_TAGS, Mentor, MentorRole, MENTOR_ROLES } from "@/lib/types";
+import { Opportunity, TypeTag, FieldTag, YearTag, TYPE_TAGS, FIELD_TAGS, YEAR_TAGS, Mentor, MentorRole, MENTOR_ROLES, Workshop, WorkshopFormat, WORKSHOP_FORMATS } from "@/lib/types";
 import { getTagColor } from "@/lib/tagColors";
 import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import OpportunityCard from "@/components/OpportunityCard";
 import MentorCard from "@/components/MentorCard";
+import WorkshopCard from "@/components/WorkshopCard";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 
@@ -59,6 +60,22 @@ export default function MyPostsPage() {
   // Mentor delete state
   const [deletingMentorId, setDeletingMentorId] = useState<string | null>(null);
 
+  // Workshop state
+  const [workshops, setWorkshops] = useState<Workshop[]>([]);
+  const [editingWorkshop, setEditingWorkshop] = useState<Workshop | null>(null);
+  const [editWorkshopForm, setEditWorkshopForm] = useState({
+    title: "",
+    description: "",
+    location: "",
+    eventDate: "",
+    eventTime: "",
+    format: "In-Person" as WorkshopFormat,
+    fieldTags: [] as FieldTag[],
+    contacts: [""],
+  });
+  const [savingWorkshop, setSavingWorkshop] = useState(false);
+  const [deletingWorkshopId, setDeletingWorkshopId] = useState<string | null>(null);
+
   // Fetch mentors posted by this user
   useEffect(() => {
     if (!user) return;
@@ -83,6 +100,39 @@ export default function MyPostsPage() {
         setMentors(m);
       })
       .catch((err) => console.error("Error fetching mentors:", err));
+  }, [user]);
+
+  // Fetch workshops posted by this user
+  useEffect(() => {
+    if (!user) return;
+    getDocs(query(collection(db, "workshops"), where("postedBy", "==", user.uid)))
+      .then((snap) => {
+        const ws: Workshop[] = snap.docs.map((d) => {
+          const data = d.data();
+          return {
+            id: d.id,
+            title: data.title,
+            description: data.description,
+            location: data.location,
+            eventDate:
+              data.eventDate instanceof Timestamp
+                ? data.eventDate.toDate()
+                : new Date(data.eventDate),
+            fieldTags: data.fieldTags || [],
+            format: data.format as WorkshopFormat,
+            contact: Array.isArray(data.contact) ? data.contact : [data.contact].filter(Boolean),
+            datePosted:
+              data.datePosted instanceof Timestamp
+                ? data.datePosted.toDate()
+                : new Date(data.datePosted),
+            postedBy: data.postedBy,
+            postedByName: data.postedByName || "Anonymous",
+            anonymous: data.anonymous ?? false,
+          };
+        });
+        setWorkshops(ws);
+      })
+      .catch((err) => console.error("Error fetching workshops:", err));
   }, [user]);
 
   useEffect(() => {
@@ -237,6 +287,79 @@ export default function MyPostsPage() {
       toast.error("Failed to delete mentor listing");
     } finally {
       setDeletingMentorId(null);
+    }
+  };
+
+  const openWorkshopEdit = (w: Workshop) => {
+    setEditingWorkshop(w);
+    const d = new Date(w.eventDate);
+    setEditWorkshopForm({
+      title: w.title,
+      description: w.description,
+      location: w.location,
+      eventDate: d.toISOString().split("T")[0],
+      eventTime: d.toTimeString().slice(0, 5),
+      format: w.format,
+      fieldTags: [...w.fieldTags],
+      contacts: [...w.contact],
+    });
+  };
+
+  const handleSaveWorkshopEdit = async () => {
+    if (!editingWorkshop) return;
+    if (!editWorkshopForm.title || !editWorkshopForm.description || !editWorkshopForm.location || !editWorkshopForm.eventDate || !editWorkshopForm.eventTime) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+    setSavingWorkshop(true);
+    try {
+      const eventDatetime = new Date(`${editWorkshopForm.eventDate}T${editWorkshopForm.eventTime}:00`);
+      await updateDoc(doc(db, "workshops", editingWorkshop.id), {
+        title: editWorkshopForm.title,
+        description: editWorkshopForm.description,
+        location: editWorkshopForm.location,
+        eventDate: Timestamp.fromDate(eventDatetime),
+        format: editWorkshopForm.format,
+        fieldTags: editWorkshopForm.fieldTags,
+        contact: editWorkshopForm.contacts.filter((c) => c.trim()),
+      });
+      setWorkshops((prev) =>
+        prev.map((w) =>
+          w.id === editingWorkshop.id
+            ? {
+                ...w,
+                title: editWorkshopForm.title,
+                description: editWorkshopForm.description,
+                location: editWorkshopForm.location,
+                eventDate: eventDatetime,
+                format: editWorkshopForm.format,
+                fieldTags: editWorkshopForm.fieldTags,
+                contact: editWorkshopForm.contacts.filter((c) => c.trim()),
+              }
+            : w
+        )
+      );
+      toast.success("Workshop updated!");
+      setEditingWorkshop(null);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update workshop");
+    } finally {
+      setSavingWorkshop(false);
+    }
+  };
+
+  const confirmDeleteWorkshop = async () => {
+    if (!deletingWorkshopId) return;
+    try {
+      await deleteDoc(doc(db, "workshops", deletingWorkshopId));
+      setWorkshops((prev) => prev.filter((w) => w.id !== deletingWorkshopId));
+      toast.success("Workshop deleted");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete workshop");
+    } finally {
+      setDeletingWorkshopId(null);
     }
   };
 
@@ -395,6 +518,40 @@ export default function MyPostsPage() {
                   onEdit={() => openMentorEdit(mentor)}
                   canDelete
                   onDelete={() => setDeletingMentorId(mentor.id)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Workshop Listings Section */}
+        {workshops.length > 0 && (
+          <div className="mt-10 border-t border-border pt-10 dark:border-border-dark">
+            <motion.h2
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="mb-1 text-xl font-bold tracking-tight text-text-primary dark:text-text-dark-primary"
+            >
+              Your Workshop Listings
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.05 }}
+              className="mb-4 text-[15px] text-text-tertiary dark:text-text-dark-tertiary"
+            >
+              Workshops you&apos;ve posted for the community
+            </motion.p>
+            <div className="grid gap-4 pb-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {workshops.map((w, i) => (
+                <WorkshopCard
+                  key={w.id}
+                  workshop={w}
+                  index={i}
+                  showActions
+                  onEdit={() => openWorkshopEdit(w)}
+                  onDelete={() => setDeletingWorkshopId(w.id)}
                 />
               ))}
             </div>
@@ -848,6 +1005,131 @@ export default function MyPostsPage() {
                 >
                   Delete
                 </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Workshop Edit Modal */}
+      <AnimatePresence>
+        {editingWorkshop && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+            onClick={() => setEditingWorkshop(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }} transition={{ duration: 0.2 }}
+              className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl border border-border bg-white p-6 shadow-xl dark:border-border-dark dark:bg-surface-dark"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-lg font-bold text-text-primary dark:text-text-dark-primary">Edit workshop</h2>
+                <button onClick={() => setEditingWorkshop(null)} className="rounded-lg p-1.5 text-text-tertiary hover:text-text-primary dark:text-text-dark-tertiary dark:hover:text-text-dark-primary">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                </button>
+              </div>
+
+              <div className="space-y-5">
+                <div>
+                  <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Title <span className="text-red-400">*</span></label>
+                  <input type="text" value={editWorkshopForm.title} onChange={(e) => setEditWorkshopForm({ ...editWorkshopForm, title: e.target.value })} className="input-field" />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Description <span className="text-red-400">*</span></label>
+                  <textarea value={editWorkshopForm.description} onChange={(e) => setEditWorkshopForm({ ...editWorkshopForm, description: e.target.value })} rows={3} className="input-field resize-none" />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Location <span className="text-red-400">*</span></label>
+                  <input type="text" value={editWorkshopForm.location} onChange={(e) => setEditWorkshopForm({ ...editWorkshopForm, location: e.target.value })} className="input-field" />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Date <span className="text-red-400">*</span></label>
+                    <input type="date" value={editWorkshopForm.eventDate} onChange={(e) => setEditWorkshopForm({ ...editWorkshopForm, eventDate: e.target.value })} className="input-field" />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Time <span className="text-red-400">*</span></label>
+                    <input type="time" value={editWorkshopForm.eventTime} onChange={(e) => setEditWorkshopForm({ ...editWorkshopForm, eventTime: e.target.value })} className="input-field" />
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-2 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Format <span className="text-red-400">*</span></label>
+                  <div className="flex flex-wrap gap-2">
+                    {WORKSHOP_FORMATS.map((f) => (
+                      <button key={f} type="button" onClick={() => setEditWorkshopForm({ ...editWorkshopForm, format: f })}
+                        className={`rounded-xl px-3.5 py-2 text-[13px] font-semibold transition-all duration-150 ${editWorkshopForm.format === f ? getTagColor(f).active : "border border-border text-text-secondary hover:border-black/20 dark:border-border-dark dark:text-text-dark-secondary dark:hover:border-white/15"}`}>
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-2 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Academic Fields</label>
+                  <div className="flex flex-wrap gap-2">
+                    {FIELD_TAGS.map((tag) => (
+                      <button key={tag} type="button"
+                        onClick={() => setEditWorkshopForm({ ...editWorkshopForm, fieldTags: toggleTag(editWorkshopForm.fieldTags, tag) as FieldTag[] })}
+                        className={`rounded-xl px-3.5 py-2 text-[13px] font-semibold transition-all duration-150 ${editWorkshopForm.fieldTags.includes(tag) ? getTagColor(tag).active : "border border-border text-text-secondary hover:border-black/20 dark:border-border-dark dark:text-text-dark-secondary dark:hover:border-white/15"}`}>
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Contact <span className="text-red-400">*</span></label>
+                  <div className="space-y-2">
+                    {editWorkshopForm.contacts.map((c, i) => (
+                      <div key={i} className="flex gap-2">
+                        <input type="text" value={c} onChange={(e) => { const a = [...editWorkshopForm.contacts]; a[i] = e.target.value; setEditWorkshopForm({ ...editWorkshopForm, contacts: a }); }} placeholder="Email or name" className="input-field flex-1" />
+                        {editWorkshopForm.contacts.length > 1 && (
+                          <button type="button" onClick={() => setEditWorkshopForm({ ...editWorkshopForm, contacts: editWorkshopForm.contacts.filter((_, idx) => idx !== i) })}
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border text-text-tertiary hover:border-red-300 hover:text-red-500 dark:border-border-dark dark:text-text-dark-tertiary">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button type="button" onClick={() => setEditWorkshopForm({ ...editWorkshopForm, contacts: [...editWorkshopForm.contacts, ""] })}
+                      className="flex items-center gap-1.5 text-[13px] font-medium text-text-tertiary hover:text-text-primary dark:text-text-dark-tertiary dark:hover:text-text-dark-primary">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>
+                      Add another contact
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 flex items-center justify-end gap-3 border-t border-border pt-5 dark:border-border-dark">
+                <button onClick={() => setEditingWorkshop(null)} className="rounded-xl px-4 py-2.5 text-[13px] font-medium text-text-secondary hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary">Cancel</button>
+                <button onClick={handleSaveWorkshopEdit} disabled={savingWorkshop} className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed">
+                  {savingWorkshop ? (<span className="flex items-center gap-2"><svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" /><path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" fill="currentColor" className="opacity-75" /></svg>Saving...</span>) : "Save Changes"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Workshop Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deletingWorkshopId && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+            onClick={() => setDeletingWorkshopId(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }} transition={{ duration: 0.2 }}
+              className="w-full max-w-sm rounded-2xl border border-border bg-white p-6 shadow-xl dark:border-border-dark dark:bg-surface-dark"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-2 text-center text-3xl">🗑️</div>
+              <h3 className="mb-2 text-center text-[15px] font-bold text-text-primary dark:text-text-dark-primary">Delete this workshop?</h3>
+              <p className="mb-6 text-center text-[13px] text-text-tertiary dark:text-text-dark-tertiary">This action cannot be undone.</p>
+              <div className="flex gap-3">
+                <button onClick={() => setDeletingWorkshopId(null)} className="flex-1 rounded-xl border border-border px-4 py-2.5 text-[13px] font-medium text-text-secondary hover:border-black/20 dark:border-border-dark dark:text-text-dark-secondary dark:hover:border-white/15">Cancel</button>
+                <button onClick={confirmDeleteWorkshop} className="flex-1 rounded-xl bg-red-500 px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-red-600">Delete</button>
               </div>
             </motion.div>
           </motion.div>

@@ -4,7 +4,6 @@ export const TYPE_TAGS = [
   "Internship (Unpaid)",
   "Job",
   "Volunteer",
-  "Workshop",
   "Research",
 ] as const;
 
@@ -71,4 +70,22 @@ export interface Opportunity {
   contact: string[];
   description: string;
   approved: boolean;
+}
+
+export const WORKSHOP_FORMATS = ["In-Person", "Virtual", "Hybrid"] as const;
+export type WorkshopFormat = (typeof WORKSHOP_FORMATS)[number];
+
+export interface Workshop {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  eventDate: Date;
+  fieldTags: FieldTag[];
+  format: WorkshopFormat;
+  contact: string[];
+  datePosted: Date;
+  postedBy: string;
+  postedByName: string;
+  anonymous: boolean;
 }
