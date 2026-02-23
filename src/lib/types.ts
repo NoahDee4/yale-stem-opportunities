@@ -89,3 +89,16 @@ export interface Workshop {
   postedByName: string;
   anonymous: boolean;
 }
+
+export interface MentorshipProgram {
+  id: string;
+  title: string;
+  description: string;
+  link: string;
+  fieldTags: FieldTag[];
+  contact: string;
+  datePosted: Date;
+  postedBy: string;
+  postedByName: string;
+  anonymous: boolean;
+}
