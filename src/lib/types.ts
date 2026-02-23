@@ -81,6 +81,7 @@ export interface Workshop {
   description: string;
   location: string;
   eventDate: Date;
+  eventEndTime?: Date;
   fieldTags: FieldTag[];
   format: WorkshopFormat;
   contact: string[];

@@ -70,6 +70,7 @@ export default function MyPostsPage() {
     location: "",
     eventDate: "",
     eventTime: "",
+    eventEndTime: "",
     format: "In-Person" as WorkshopFormat,
     fieldTags: [] as FieldTag[],
     contacts: [""],
@@ -160,6 +161,11 @@ export default function MyPostsPage() {
               data.eventDate instanceof Timestamp
                 ? data.eventDate.toDate()
                 : new Date(data.eventDate),
+            eventEndTime: data.eventEndTime
+              ? (data.eventEndTime instanceof Timestamp
+                  ? data.eventEndTime.toDate()
+                  : new Date(data.eventEndTime))
+              : undefined,
             fieldTags: data.fieldTags || [],
             format: data.format as WorkshopFormat,
             contact: Array.isArray(data.contact) ? data.contact : [data.contact].filter(Boolean),
@@ -335,12 +341,14 @@ export default function MyPostsPage() {
   const openWorkshopEdit = (w: Workshop) => {
     setEditingWorkshop(w);
     const d = new Date(w.eventDate);
+    const endD = w.eventEndTime ? new Date(w.eventEndTime) : null;
     setEditWorkshopForm({
       title: w.title,
       description: w.description,
       location: w.location,
       eventDate: d.toISOString().split("T")[0],
       eventTime: d.toTimeString().slice(0, 5),
+      eventEndTime: endD ? endD.toTimeString().slice(0, 5) : "",
       format: w.format,
       fieldTags: [...w.fieldTags],
       contacts: [...w.contact],
@@ -356,11 +364,17 @@ export default function MyPostsPage() {
     setSavingWorkshop(true);
     try {
       const eventDatetime = new Date(`${editWorkshopForm.eventDate}T${editWorkshopForm.eventTime}:00`);
+      const eventEndDatetime = editWorkshopForm.eventEndTime
+        ? new Date(`${editWorkshopForm.eventDate}T${editWorkshopForm.eventEndTime}:00`)
+        : null;
       await updateDoc(doc(db, "workshops", editingWorkshop.id), {
         title: editWorkshopForm.title,
         description: editWorkshopForm.description,
         location: editWorkshopForm.location,
         eventDate: Timestamp.fromDate(eventDatetime),
+        ...(eventEndDatetime
+          ? { eventEndTime: Timestamp.fromDate(eventEndDatetime) }
+          : { eventEndTime: null }),
         format: editWorkshopForm.format,
         fieldTags: editWorkshopForm.fieldTags,
         contact: editWorkshopForm.contacts.filter((c) => c.trim()),
@@ -374,6 +388,7 @@ export default function MyPostsPage() {
                 description: editWorkshopForm.description,
                 location: editWorkshopForm.location,
                 eventDate: eventDatetime,
+                eventEndTime: eventEndDatetime ?? undefined,
                 format: editWorkshopForm.format,
                 fieldTags: editWorkshopForm.fieldTags,
                 contact: editWorkshopForm.contacts.filter((c) => c.trim()),
@@ -1186,9 +1201,15 @@ export default function MyPostsPage() {
                     <input type="date" value={editWorkshopForm.eventDate} onChange={(e) => setEditWorkshopForm({ ...editWorkshopForm, eventDate: e.target.value })} className="input-field" />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Time <span className="text-red-400">*</span></label>
+                    <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Start Time <span className="text-red-400">*</span></label>
                     <input type="time" value={editWorkshopForm.eventTime} onChange={(e) => setEditWorkshopForm({ ...editWorkshopForm, eventTime: e.target.value })} className="input-field" />
                   </div>
+                </div>
+                <div className="sm:w-1/2 sm:pr-2">
+                  <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
+                    End Time <span className="text-[11px] font-normal text-text-tertiary dark:text-text-dark-tertiary">(optional)</span>
+                  </label>
+                  <input type="time" value={editWorkshopForm.eventEndTime} onChange={(e) => setEditWorkshopForm({ ...editWorkshopForm, eventEndTime: e.target.value })} className="input-field" />
                 </div>
                 <div>
                   <label className="mb-2 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Format <span className="text-red-400">*</span></label>

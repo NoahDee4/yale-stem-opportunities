@@ -46,6 +46,11 @@ export default function WorkshopsPage() {
             data.eventDate instanceof Timestamp
               ? data.eventDate.toDate()
               : new Date(data.eventDate),
+          eventEndTime: data.eventEndTime
+            ? (data.eventEndTime instanceof Timestamp
+                ? data.eventEndTime.toDate()
+                : new Date(data.eventEndTime))
+            : undefined,
           fieldTags: data.fieldTags || [],
           format: data.format,
           contact: Array.isArray(data.contact) ? data.contact : [data.contact].filter(Boolean),

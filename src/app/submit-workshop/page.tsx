@@ -24,6 +24,7 @@ export default function SubmitWorkshopPage() {
     location: "",
     eventDate: "",
     eventTime: "",
+    eventEndTime: "",
     format: "" as WorkshopFormat | "",
     fieldTags: [] as FieldTag[],
     contacts: [""],
@@ -51,11 +52,15 @@ export default function SubmitWorkshopPage() {
     setSubmitting(true);
     try {
       const eventDatetime = new Date(`${form.eventDate}T${form.eventTime}:00`);
+      const eventEndDatetime = form.eventEndTime
+        ? new Date(`${form.eventDate}T${form.eventEndTime}:00`)
+        : null;
       await addDoc(collection(db, "workshops"), {
         title: form.title,
         description: form.description,
         location: form.location,
         eventDate: Timestamp.fromDate(eventDatetime),
+        ...(eventEndDatetime && { eventEndTime: Timestamp.fromDate(eventEndDatetime) }),
         format: form.format,
         fieldTags: form.fieldTags,
         contact: form.contacts.filter((c) => c.trim()),
@@ -165,7 +170,7 @@ export default function SubmitWorkshopPage() {
               </div>
               <div>
                 <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
-                  Event Time <span className="text-red-400">*</span>
+                  Start Time <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="time"
@@ -174,6 +179,19 @@ export default function SubmitWorkshopPage() {
                   className="input-field"
                 />
               </div>
+            </div>
+
+            {/* End Time */}
+            <div className="sm:w-1/2 sm:pr-2">
+              <label className="mb-1.5 block text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">
+                End Time <span className="text-[11px] font-normal text-text-tertiary dark:text-text-dark-tertiary">(optional)</span>
+              </label>
+              <input
+                type="time"
+                value={form.eventEndTime}
+                onChange={(e) => setForm({ ...form, eventEndTime: e.target.value })}
+                className="input-field"
+              />
             </div>
 
             {/* Format */}

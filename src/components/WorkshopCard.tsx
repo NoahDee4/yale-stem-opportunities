@@ -139,6 +139,9 @@ export default function WorkshopCard({
             </svg>
             <span className={isPast ? "text-red-400" : ""}>
               {isPast ? "Past — " : ""}{format(new Date(workshop.eventDate), "MMM d, yyyy 'at' h:mm a")}
+              {workshop.eventEndTime && (
+                <> – {format(new Date(workshop.eventEndTime), "h:mm a")}</>
+              )}
             </span>
           </div>
         </div>
