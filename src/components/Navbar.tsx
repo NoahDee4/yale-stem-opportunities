@@ -49,23 +49,37 @@ export default function Navbar() {
 
         {/* Desktop */}
         <div className="hidden items-center gap-1 md:flex">
-          <Link href="/" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary">
-            Opportunities
-          </Link>
-          <Link href="/workshops" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary">
-            Workshops
-          </Link>
-          <Link href="/mentorship" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary">
-            Mentorship
-          </Link>
-          <Link href="/mentorship-programs" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary">
-            Programs
-          </Link>
+          {/* Browse dropdown */}
+          <div className="relative group">
+            <button className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+              </svg>
+              Browse
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+            <div className="absolute left-0 top-full invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-150 pt-1.5 z-50">
+              <div className="w-52 rounded-xl border border-border bg-white py-1.5 shadow-lg dark:border-border-dark dark:bg-surface-dark">
+                <Link href="/" className="flex items-center gap-2 px-3.5 py-2 text-[13px] font-medium text-text-secondary hover:text-text-primary hover:bg-surface-tertiary/60 dark:text-text-dark-secondary dark:hover:text-text-dark-primary dark:hover:bg-surface-dark-tertiary/60">
+                  Opportunities
+                </Link>
+                <Link href="/workshops" className="flex items-center gap-2 px-3.5 py-2 text-[13px] font-medium text-text-secondary hover:text-text-primary hover:bg-surface-tertiary/60 dark:text-text-dark-secondary dark:hover:text-text-dark-primary dark:hover:bg-surface-dark-tertiary/60">
+                  Workshops
+                </Link>
+                <Link href="/mentorship" className="flex items-center gap-2 px-3.5 py-2 text-[13px] font-medium text-text-secondary hover:text-text-primary hover:bg-surface-tertiary/60 dark:text-text-dark-secondary dark:hover:text-text-dark-primary dark:hover:bg-surface-dark-tertiary/60">
+                  Mentorship
+                </Link>
+                <Link href="/mentorship-programs" className="flex items-center gap-2 px-3.5 py-2 text-[13px] font-medium text-text-secondary hover:text-text-primary hover:bg-surface-tertiary/60 dark:text-text-dark-secondary dark:hover:text-text-dark-primary dark:hover:bg-surface-dark-tertiary/60">
+                  Programs
+                </Link>
+              </div>
+            </div>
+          </div>
+
           {user && (
             <>
-              <Link href="/my-posts" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary">
-                Your Posts
-              </Link>
               {/* Saved Lists dropdown */}
               <div className="relative group">
                 <button className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary">
@@ -106,6 +120,10 @@ export default function Navbar() {
                   </div>
                 </div>
               </div>
+
+              <Link href="/my-posts" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-text-secondary transition-colors hover:text-text-primary dark:text-text-dark-secondary dark:hover:text-text-dark-primary">
+                Your Posts
+              </Link>
             </>
           )}
 
@@ -208,6 +226,7 @@ export default function Navbar() {
             className="overflow-hidden border-t border-border dark:border-border-dark md:hidden"
           >
             <div className="flex flex-col gap-1 px-6 py-3">
+              <p className="px-3 pt-1 pb-0.5 text-[11px] font-semibold uppercase tracking-wider text-text-tertiary dark:text-text-dark-tertiary">Browse</p>
               <Link href="/" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Opportunities</Link>
               <Link href="/workshops" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Workshops</Link>
               <Link href="/mentorship" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-[13px] font-medium text-text-secondary dark:text-text-dark-secondary">Mentorship</Link>
