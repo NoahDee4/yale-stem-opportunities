@@ -79,9 +79,10 @@ export default function OpportunityCard({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.04, ease: [0.16, 1, 0.3, 1] }}
+      className="h-full"
     >
-      <Link href={`/opportunity/${opportunity.id}`}>
-        <div className={`group relative rounded-2xl border border-border bg-white p-5 transition-all duration-200 hover:border-black/15 hover:shadow-[0_1px_6px_rgba(0,0,0,0.04)] dark:border-border-dark dark:bg-surface-dark-secondary dark:hover:border-white/10 ${isExpired ? "opacity-40" : ""}`}>
+      <Link href={`/opportunity/${opportunity.id}`} className="flex h-full flex-col">
+        <div className={`group relative flex h-full flex-col rounded-2xl border border-border bg-white p-5 transition-all duration-200 hover:border-black/15 hover:shadow-[0_1px_6px_rgba(0,0,0,0.04)] dark:border-border-dark dark:bg-surface-dark-secondary dark:hover:border-white/10 ${isExpired ? "opacity-40" : ""}`}>
           {/* Title + Actions */}
           <div className="mb-3 flex items-start justify-between gap-3">
             <h3 className="text-[15px] font-semibold leading-snug text-text-primary dark:text-text-dark-primary">
@@ -147,32 +148,36 @@ export default function OpportunityCard({
           </p>
 
           {/* Tags */}
-          <div className="mb-4 flex flex-wrap gap-1.5">
-            {opportunity.typeTags.map((tag) => (
-              <span
-                key={tag}
-                className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${getTagColor(tag).pill}`}
-              >
-                {tag}
-              </span>
-            ))}
-            {opportunity.fieldTags.map((tag) => (
-              <span
-                key={tag}
-                className={`rounded-md px-2 py-0.5 text-[11px] font-medium ${getTagColor(tag).pill}`}
-              >
-                {tag}
-              </span>
-            ))}
-            {opportunity.yearTags.map((tag) => (
-              <span
-                key={tag}
-                className={`rounded-md px-2 py-0.5 text-[11px] font-medium ${getTagColor(tag).pill}`}
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
+          {(() => {
+            const allTags = [
+              ...opportunity.typeTags.map((t) => ({ tag: t, bold: true })),
+              ...opportunity.fieldTags.map((t) => ({ tag: t, bold: false })),
+              ...opportunity.yearTags.map((t) => ({ tag: t, bold: false })),
+            ];
+            const maxVisible = 5;
+            const visible = allTags.slice(0, maxVisible);
+            const overflow = allTags.length - maxVisible;
+            return (
+              <div className="mb-4 flex flex-wrap gap-1.5">
+                {visible.map(({ tag, bold }) => (
+                  <span
+                    key={tag}
+                    className={`rounded-md px-2 py-0.5 text-[11px] ${bold ? "font-semibold" : "font-medium"} ${getTagColor(tag).pill}`}
+                  >
+                    {tag}
+                  </span>
+                ))}
+                {overflow > 0 && (
+                  <span className="rounded-md bg-surface-secondary px-2 py-0.5 text-[11px] font-medium text-text-tertiary dark:bg-surface-dark-tertiary dark:text-text-dark-tertiary">
+                    +{overflow} more
+                  </span>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* Spacer pushes footer to bottom */}
+          <div className="flex-1" />
 
           {/* Footer */}
           <div className="flex items-center justify-between text-[11px] text-text-tertiary dark:text-text-dark-tertiary">

@@ -62,7 +62,7 @@ export default function MentorCard({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.04 }}
-      className="flex flex-col rounded-2xl border border-border bg-white p-5 transition-shadow duration-200 hover:shadow-md dark:border-border-dark dark:bg-surface-dark-secondary dark:hover:shadow-black/20"
+      className="flex h-full flex-col rounded-2xl border border-border bg-white p-5 transition-shadow duration-200 hover:shadow-md dark:border-border-dark dark:bg-surface-dark-secondary dark:hover:shadow-black/20"
     >
       {/* Header row */}
       <div className="mb-3 flex items-start gap-3">
@@ -170,19 +170,29 @@ export default function MentorCard({
       )}
 
       {/* Field tags */}
-      {mentor.fields.length > 0 && (
-        <div className="mb-4 flex flex-wrap gap-1.5">
-          {mentor.fields.map((field) => (
-            <span
-              key={field}
-              className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium ${getTagColor(field).pill}`}
-            >
-              <span>{fieldIcons[field]}</span>
-              {field}
-            </span>
-          ))}
-        </div>
-      )}
+      {mentor.fields.length > 0 && (() => {
+        const maxVisible = 5;
+        const visible = mentor.fields.slice(0, maxVisible);
+        const overflow = mentor.fields.length - maxVisible;
+        return (
+          <div className="mb-4 flex flex-wrap gap-1.5">
+            {visible.map((field) => (
+              <span
+                key={field}
+                className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium ${getTagColor(field).pill}`}
+              >
+                <span>{fieldIcons[field]}</span>
+                {field}
+              </span>
+            ))}
+            {overflow > 0 && (
+              <span className="rounded-md bg-surface-secondary px-2 py-0.5 text-[11px] font-medium text-text-tertiary dark:bg-surface-dark-tertiary dark:text-text-dark-tertiary">
+                +{overflow} more
+              </span>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Email CTA */}
       <div className="mt-auto pt-1">
